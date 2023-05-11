@@ -1,6 +1,8 @@
 package controller
 
-import "github.com/JabinGP/demo-chatroom/database"
+import (
+	"github.com/JabinGP/demo-chatroom/infra/database"
+)
 
 import "github.com/JabinGP/demo-chatroom/service"
 

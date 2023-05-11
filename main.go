@@ -5,9 +5,6 @@ import (
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/middleware"
 	"github.com/JabinGP/demo-chatroom/route"
-
-	_ "github.com/go-sql-driver/mysql"
-
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/recover"
 	"net/http"

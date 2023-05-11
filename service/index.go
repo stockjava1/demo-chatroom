@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/JabinGP/demo-chatroom/database"
+	"github.com/JabinGP/demo-chatroom/infra/database"
 )
 
 // NewMessage get a message service

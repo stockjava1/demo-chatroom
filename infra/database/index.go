@@ -6,9 +6,7 @@ import (
 	"github.com/JabinGP/demo-chatroom/config"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/model/pojo"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"os"
+	_ "github.com/go-sql-driver/mysql"
 	"sync"
 	"xorm.io/core"
 	"xorm.io/xorm"
@@ -77,18 +75,5 @@ func configDB() {
 	// 而SnakeMapper将"ID"转换为"i_d"
 	// 因此我们需要手动指定转换器为core.GonicMapper{}
 	DB.SetMapper(core.GonicMapper{})
-
-	zlog := log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Str("index", "index").Logger()
-	zlog.Level(zerolog.DebugLevel)
-	//logger.Logger.Info().Msg("Hello, Main!")
-	// Create a zerolog logger for xorm
-	//xlog := NewZerologLogger(logger.Logger())
-	xlog := NewZerologLogger(zlog)
-
-	// Create a xorm engine and set its logger to zerolog logger
-	//engine, err := xorm.NewEngine("sqlite3", "./test.db")
-	//if err != nil {
-	//	zlog.Fatal().Err(err).Msg("Failed to create engine")
-	//}
-	DB.SetLogger(xlog)
+	DB.SetLogger(NewZerologLogger(logger.Logger()))
 }
