@@ -1,10 +1,9 @@
 package config
 
 import (
-	"log"
-	"sync"
-
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/spf13/viper"
+	"sync"
 )
 
 var once sync.Once
@@ -13,6 +12,7 @@ var once sync.Once
 var Viper *viper.Viper
 
 func init() {
+
 	once.Do(func() {
 		Viper = viper.New()
 		// scan the file named config in the root directory
@@ -21,9 +21,9 @@ func init() {
 
 		// read config, if failed, configure by default
 		if err := Viper.ReadInConfig(); err == nil {
-			log.Println("Read config successfully: ", Viper.ConfigFileUsed())
+			logger.Info("Read config successfully: %s", Viper.ConfigFileUsed())
 		} else {
-			log.Printf("Read failed: %s \n", err)
+			logger.Info("Read failed: %s \n", err)
 			panic(err)
 		}
 	})

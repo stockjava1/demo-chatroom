@@ -2,14 +2,13 @@ package controller
 
 import (
 	"errors"
-	"log"
-
 	"github.com/JabinGP/demo-chatroom/model"
 	"github.com/JabinGP/demo-chatroom/model/pojo"
 	"github.com/JabinGP/demo-chatroom/model/reqo"
 	"github.com/JabinGP/demo-chatroom/model/reso"
 	"github.com/JabinGP/demo-chatroom/tool"
 	"github.com/kataras/iris/v12"
+	"github.com/rs/zerolog/log"
 )
 
 // PostLogin user login
@@ -25,7 +24,7 @@ func PostLogin(ctx iris.Context) {
 		return
 	}
 
-	log.Println(user, req)
+	log.Print(user, req)
 	// If passwd are inconsistent
 	if user.Passwd != req.Passwd {
 		ctx.StatusCode(iris.StatusBadRequest)
