@@ -2,9 +2,8 @@ package database
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"xorm.io/core"
-	"xorm.io/xorm"
 )
 
 func printStrings(v ...interface{}) string {
@@ -34,82 +33,64 @@ func printStrings(v ...interface{}) string {
 
 // ZerologLogger implements xorm.Logger interface with zerolog
 type ZerologLogger struct {
-	logger zerolog.Logger
-	level  core.LogLevel
+	logger logger.CustZeroLogger
 }
 
 // NewZerologLogger creates a new ZerologLogger instance
-func NewZerologLogger(logger zerolog.Logger) *ZerologLogger {
+func NewZerologLogger(logger *logger.CustZeroLogger) *ZerologLogger {
+
 	return &ZerologLogger{
-		logger: logger,
-		level:  xorm.DEFAULT_LOG_LEVEL,
+		logger: *logger,
 	}
 }
 
 // Debugf implements xorm.Logger interface
 func (zl *ZerologLogger) Debugf(format string, v ...interface{}) {
-	if zl.level <= core.LOG_DEBUG {
-		zl.logger.Debug().Msgf(format, v...)
-	}
+	zl.logger.Debug(format, v...)
 }
 
 // Infof implements xorm.Logger interface
 func (zl *ZerologLogger) Infof(format string, v ...interface{}) {
-	if zl.level <= core.LOG_INFO {
-		zl.logger.Info().Msgf(format, v...)
-	}
+	zl.logger.Info(format, v...)
 }
 
 // Warnf implements xorm.Logger interface
 func (zl *ZerologLogger) Warnf(format string, v ...interface{}) {
-	if zl.level <= core.LOG_WARNING {
-		zl.logger.Warn().Msgf(format, v...)
-	}
+	zl.logger.Warn(format, v...)
 }
 
 // Errorf implements xorm.Logger interface
 func (zl *ZerologLogger) Errorf(format string, v ...interface{}) {
-	if zl.level <= core.LOG_ERR {
-		zl.logger.Error().Msgf(format, v...)
-	}
+	zl.logger.Error(format, v...)
 }
 
 // Debugf implements xorm.Logger interface
 func (zl *ZerologLogger) Debug(v ...interface{}) {
-	if zl.level <= core.LOG_DEBUG {
-		zl.logger.Debug().Msg(printStrings(v))
-	}
+	zl.logger.Debug(printStrings(v))
 }
 
 // Infof implements xorm.Logger interface
 func (zl *ZerologLogger) Info(v ...interface{}) {
-	if zl.level <= core.LOG_INFO {
-		zl.logger.Info().Msg(printStrings(v))
-	}
+	zl.logger.Info(printStrings(v))
 }
 
 // Warnf implements xorm.Logger interface
 func (zl *ZerologLogger) Warn(v ...interface{}) {
-	if zl.level <= core.LOG_WARNING {
-		zl.logger.Warn().Msg(printStrings(v))
-	}
+	zl.logger.Warn(printStrings(v))
 }
 
 // Errorf implements xorm.Logger interface
 func (zl *ZerologLogger) Error(v ...interface{}) {
-	if zl.level <= core.LOG_ERR {
-		zl.logger.Error().Msg(printStrings(v))
-	}
+	zl.logger.Error(printStrings(v))
 }
 
 // Level implements xorm.Logger interface
 func (zl *ZerologLogger) Level() core.LogLevel {
-	return zl.level
+	return core.LOG_OFF
 }
 
 // SetLevel implements xorm.Logger interface
 func (zl *ZerologLogger) SetLevel(l core.LogLevel) {
-	zl.level = l
 }
 
 // ShowSQL implements xorm.Logger interface

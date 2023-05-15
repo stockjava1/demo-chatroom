@@ -38,13 +38,16 @@ func irisZerologMiddleware(ctx iris.Context) {
 	path := ctx.Path()
 
 	// 创建一个子日志器，添加请求的字段
-	sublogger := logger.Logger().With().
+	log := logger.NewLogger()
+	log.SetLogLevel(config.Viper.GetString("loglevel.http"))
+
+	subLogger := log.GetLogger().With().Str("component", "web").
 		Str("method", method).
 		Str("path", path).
 		Logger()
-
+	log.SetLogger(&subLogger)
 	// 记录请求开始的日志
-	sublogger.Info().Msg("request started")
+	log.Info("request started")
 
 	// 创建一个代理响应写入器，捕获状态码和大小
 	prw := &proxyResponseWriter{ctx.ResponseWriter(), http.StatusOK, 0}
@@ -55,11 +58,15 @@ func irisZerologMiddleware(ctx iris.Context) {
 	elapsed := time.Since(start)
 
 	// 记录请求结束的日志
-	sublogger.Info().
-		Int("status", prw.statusCode).
-		Int("size", prw.size).
-		Dur("elapsed", elapsed).
-		Msg("request completed")
+	//output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
+	//zlog2 := zlog.Output(output).With().Timestamp().Logger()
+	//zlog2.Info().
+	//	Int("status", prw.statusCode).
+	//	Int("size", prw.size).
+	//	Dur("elapsed", elapsed).
+	//	Msg("request completed")
+
+	log.Info("status %d, size %d, elapsed %l, request completed", prw.statusCode, prw.size, elapsed)
 }
 
 func main() {
@@ -67,10 +74,12 @@ func main() {
 	//logger.InitLog()
 	// 在 main 包中使用 Logger
 
-	logLevel := config.Viper.GetString("server.logger.level")
-	logger.SetLogLevel(logLevel)
+	//logLevel := config.Viper.GetString("server.logger.level")
+	//logger.SetLogLevel(logLevel)
+	log := logger.NewLogger()
+	log.SetLogLevel(config.Viper.GetString("loglevel.app"))
 
-	logger.Info("start application")
+	log.Info("start application")
 	app := iris.New()
 	//app.Logger().SetLevel(config.Viper.GetString("server.logger.level"))
 	// Add logger to log the requests to the terminal

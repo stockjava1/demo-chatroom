@@ -30,6 +30,9 @@ git clone https://github.com/JabinGP/demo-chatroom.git
 cd demo-chatroom
 // 复制config.toml.example 为 config.toml 并填写数据库信息，或者可选修改端口号
 go run main.go
+
+//用rizla热启动.
+rizla main.go 
 ```
 
 默认为 8888 端口，启动后访问`http://localhost:8888`

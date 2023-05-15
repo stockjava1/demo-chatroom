@@ -1,16 +1,28 @@
 package controller
 
 import (
+	"encoding/json"
+	"github.com/JabinGP/demo-chatroom/config"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/model"
 	"github.com/JabinGP/demo-chatroom/model/reqo"
 	"github.com/JabinGP/demo-chatroom/model/reso"
 	"github.com/kataras/iris/v12"
 )
 
+var log *logger.CustZeroLogger
+
+func init() {
+	log = logger.NewLogger()
+	log.SetLogLevel(config.Viper.GetString("loglevel.database"))
+}
+
 // PostMessage send message
 func PostMessage(ctx iris.Context) {
 	req := reqo.PostMessage{}
 	ctx.ReadJSON(&req)
+	xx, err := json.Marshal(ctx.Values().Get("logined").(model.Logined))
+	log.Error(">>>> post %s", string(xx))
 	logined := ctx.Values().Get("logined").(model.Logined)
 
 	insertID, err := messageService.Insert(logined.ID, req.ReceiverID, req.Content)

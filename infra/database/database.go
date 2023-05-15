@@ -16,8 +16,11 @@ var once sync.Once
 
 // DB 数据库连接实例
 var DB *xorm.Engine
+var log *logger.CustZeroLogger
 
 func init() {
+	log = logger.NewLogger()
+	log.SetLogLevel(config.Viper.GetString("loglevel.database"))
 	once.Do(func() {
 		dbType := config.Viper.GetString("database.driver")
 		switch dbType {
@@ -47,7 +50,7 @@ func initMysql() {
 	var err error
 	DB, err = xorm.NewEngine(dbType, dbURL)
 	if err != nil {
-		logger.Error("Open mysql failed,err:%v\n", err)
+		log.Error("Open mysql failed,err:%v\n", err)
 		panic(err)
 	}
 }
@@ -57,7 +60,7 @@ func initTable() {
 	// 自动创建表
 	err := DB.Sync2(new(pojo.User), new(pojo.Message))
 	if err != nil {
-		logger.Error("同步数据库和结构体字段失败:%v\n", err)
+		log.Error("同步数据库和结构体字段失败:%v\n", err)
 		panic(err)
 	}
 }
@@ -65,7 +68,7 @@ func initTable() {
 // 设置可选配置
 func configDB() {
 	// 设置日志等级，设置显示sql，设置显示执行时间
-	DB.SetLogLevel(xorm.DEFAULT_LOG_LEVEL)
+	DB.SetLogLevel(core.LOG_ERR) //xorm.DEFAULT_LOG_LEVEL
 	DB.ShowSQL(true)
 	DB.ShowExecTime(true)
 
@@ -75,5 +78,9 @@ func configDB() {
 	// 而SnakeMapper将"ID"转换为"i_d"
 	// 因此我们需要手动指定转换器为core.GonicMapper{}
 	DB.SetMapper(core.GonicMapper{})
-	DB.SetLogger(NewZerologLogger(logger.Logger()))
+
+	// 创建一个子日志器，添加请求的字段
+	//sublogger := logger.NewLogger().With().Str("component", "database").Logger()
+
+	DB.SetLogger(NewZerologLogger(log))
 }

@@ -11,7 +11,10 @@ var once sync.Once
 // Viper viper global instance
 var Viper *viper.Viper
 
+var log *logger.CustZeroLogger
+
 func init() {
+	log = logger.NewLogger()
 
 	once.Do(func() {
 		Viper = viper.New()
@@ -21,9 +24,10 @@ func init() {
 
 		// read config, if failed, configure by default
 		if err := Viper.ReadInConfig(); err == nil {
-			logger.Info("Read config successfully: %s", Viper.ConfigFileUsed())
+			log.SetLogLevel(Viper.GetString("loglevel.config"))
+			log.Info("Read config successfully: %s", Viper.ConfigFileUsed())
 		} else {
-			logger.Info("Read failed: %s \n", err)
+			log.Info("Read failed: %s \n", err)
 			panic(err)
 		}
 	})
