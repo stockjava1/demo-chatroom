@@ -40,7 +40,7 @@ func irisZerologMiddleware(ctx iris.Context) {
 	// 创建一个子日志器，添加请求的字段
 	log := logger.NewLogger()
 	log.SetLogLevel(config.Viper.GetString("loglevel.http"))
-
+	log.SetModule("http")
 	subLogger := log.GetLogger().With().Str("component", "web").
 		Str("method", method).
 		Str("path", path).
@@ -66,7 +66,7 @@ func irisZerologMiddleware(ctx iris.Context) {
 	//	Dur("elapsed", elapsed).
 	//	Msg("request completed")
 
-	log.Info("status %d, size %d, elapsed %l, request completed", prw.statusCode, prw.size, elapsed)
+	log.Info("status %d, size %d, elapsed %v, request completed", prw.statusCode, prw.size, elapsed)
 }
 
 func main() {
@@ -78,7 +78,7 @@ func main() {
 	//logger.SetLogLevel(logLevel)
 	log := logger.NewLogger()
 	log.SetLogLevel(config.Viper.GetString("loglevel.app"))
-
+	log.SetModule("app")
 	log.Info("start application")
 	app := iris.New()
 	//app.Logger().SetLevel(config.Viper.GetString("server.logger.level"))

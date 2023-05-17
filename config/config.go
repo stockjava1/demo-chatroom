@@ -15,7 +15,7 @@ var log *logger.CustZeroLogger
 
 func init() {
 	log = logger.NewLogger()
-
+	log.SetModule("config")
 	once.Do(func() {
 		Viper = viper.New()
 		// scan the file named config in the root directory
