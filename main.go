@@ -1,25 +1,8 @@
-// swagger middleware for Iris
-// swagger embed files
-
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host localhost:8888
-// @BasePath /vue
-
 package main
 
 import (
 	"github.com/JabinGP/demo-chatroom/config"
+	_ "github.com/JabinGP/demo-chatroom/docs"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/middleware"
 	"github.com/JabinGP/demo-chatroom/route"
@@ -87,7 +70,9 @@ func irisZerologMiddleware(ctx iris.Context) {
 	log.Info("status %d, size %d, elapsed %v, request completed", prw.statusCode, prw.size, elapsed)
 }
 
-/*
+// swagger middleware for Iris
+// swagger embed files
+
 // @title Swagger Example API
 // @version 1.0
 // @description This is a sample server Petstore server.
@@ -100,10 +85,14 @@ func irisZerologMiddleware(ctx iris.Context) {
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host petstore.swagger.io
-// @BasePath /v2
-*/
+// @host localhost
+// @BasePath /api
 
+// @securityDefinitions.basic BasicAuth
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// 初始化 Logger
 	//logger.InitLog()
