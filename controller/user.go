@@ -11,6 +11,16 @@ import (
 )
 
 // PostLogin user login
+// @Tags User
+// @Summary Login 用户登录
+// @Description login by username and password
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} reso.PostLogin
+// @Failure 400 {object} reso.HTTPError
+// @Failure 404 {object} reso.HTTPError
+// @Failure 500 {object} reso.HTTPError
+// @Router /login [post]
 func PostLogin(ctx iris.Context) {
 	req := reqo.PostLogin{}
 	ctx.ReadJSON(&req)
@@ -48,6 +58,17 @@ func PostLogin(ctx iris.Context) {
 }
 
 // PostUser user register
+// @Tags Save
+// @Summary Save 用户注册
+// @Description save user
+// @Param user body reqo.PostUser true "用户信息" zhangsan
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} reso.PostUser
+// @Failure 400 {object} reso.HTTPError
+// @Failure 404 {object} reso.HTTPError
+// @Failure 500 {object} reso.HTTPError
+// @Router /user [post]
 func PostUser(ctx iris.Context) {
 	req := reqo.PostUser{}
 	ctx.ReadJSON(&req)
