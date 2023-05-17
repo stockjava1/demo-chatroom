@@ -91,7 +91,6 @@ func PostUser(ctx iris.Context) {
 	ctx.JSON(res)
 }
 
-// GetUser return user list
 func GetUser(ctx iris.Context) {
 	req := reqo.GetUser{}
 	ctx.ReadQuery(&req)

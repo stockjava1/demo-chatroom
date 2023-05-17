@@ -4,7 +4,6 @@ import (
 	"github.com/JabinGP/demo-chatroom/model"
 	"github.com/iris-contrib/middleware/jwt"
 	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/context"
 )
 
 var (
@@ -14,7 +13,10 @@ var (
 
 func initJWT() {
 	JWT = jwt.New(jwt.Config{
-		ErrorHandler: func(ctx context.Context, err error) {
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			return []byte("My Secret"), nil
+		},
+		ErrorHandler: func(ctx iris.Context, err error) {
 			if err == nil {
 				return
 			}
@@ -23,10 +25,7 @@ func initJWT() {
 			ctx.JSON(model.ErrorUnauthorized(err))
 		},
 
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte("My Secret"), nil
-		},
-
 		SigningMethod: jwt.SigningMethodHS256,
 	})
+
 }

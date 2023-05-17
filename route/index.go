@@ -8,6 +8,7 @@ import (
 func Route(app *iris.Application) {
 	routeStatic(app)
 	routeRedirect(app)
+	routeSwagger(app)
 	v1 := app.Party("/v1")
 	{
 		routeToken(v1)
