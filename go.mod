@@ -8,16 +8,13 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/iris-contrib/middleware/cors v0.0.0-20230429193704-33473bd2dc16
 	github.com/iris-contrib/middleware/jwt v0.0.0-20230429193704-33473bd2dc16
-	github.com/iris-contrib/swagger v0.0.0-20230311205341-32127a753a68
 	github.com/iris-contrib/swagger/v12 v12.2.0-alpha
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
-	github.com/kataras/iris v0.0.2
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/rs/zerolog v1.29.1
-	github.com/ryanuber/columnize v2.1.2+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.1 // indirect
 	github.com/spf13/viper v1.8.1
 	github.com/swaggo/swag v1.16.1

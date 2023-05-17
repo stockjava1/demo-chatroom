@@ -1,5 +1,5 @@
-basePath: /vue
-host: localhost:8888
+basePath: /api
+host: localhost
 info:
   contact:
     email: support@swagger.io
@@ -13,4 +13,11 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths: {}
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+  BasicAuth:
+    type: basic
 swagger: "2.0"

@@ -19,12 +19,10 @@ func routeSwagger(party router.Party) {
 		party.Get("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler))
 	*/
 
-	//config := &swagger.Config{
-	//	URL:         "http://localhost:8888/swagger/doc.json", //The url pointing to API definition
-	//	DeepLinking: true,
-	//}
-
-	//party.Get("/swagger/{any:path}", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
-	//party.Get("/swagger/*any", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
-	party.Get("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler))
+	config := &swagger.Config{
+		URL:         "/swagger/doc.json", //The url pointing to API definition
+		DeepLinking: true,
+	}
+	// use swagger middleware to
+	party.Get("/swagger/{any:path}", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
 }
