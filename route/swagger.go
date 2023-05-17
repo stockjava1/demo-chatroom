@@ -20,7 +20,7 @@ func routeSwagger(party router.Party) {
 	*/
 
 	config := &swagger.Config{
-		URL:         "/swagger/doc.json", //The url pointing to API definition
+		URL:         "http://localhost:8888/swagger/doc.json", //The url pointing to API definition
 		DeepLinking: true,
 	}
 	// use swagger middleware to

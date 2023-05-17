@@ -1,5 +1,12 @@
-basePath: /api
+basePath: /v1
 definitions:
+  reqo.PostLogin:
+    properties:
+      passwd:
+        type: string
+      username:
+        type: string
+    type: object
   reqo.PostUser:
     properties:
       age:
@@ -37,7 +44,7 @@ definitions:
       username:
         type: string
     type: object
-host: localhost
+host: localhost:8888
 info:
   contact:
     email: support@swagger.io
@@ -56,6 +63,13 @@ paths:
       consumes:
       - application/json
       description: login by username and password
+      parameters:
+      - description: Account Info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/reqo.PostLogin'
       produces:
       - application/json
       responses:

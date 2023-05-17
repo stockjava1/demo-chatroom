@@ -15,8 +15,8 @@
         },
         "version": "1.0"
     },
-    "host": "localhost",
-    "basePath": "/api",
+    "host": "localhost:8888",
+    "basePath": "/v1",
     "paths": {
         "/login": {
             "post": {
@@ -31,6 +31,17 @@
                     "User"
                 ],
                 "summary": "Login 用户登录",
+                "parameters": [
+                    {
+                        "description": "Account Info",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/reqo.PostLogin"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -113,6 +124,17 @@
         }
     },
     "definitions": {
+        "reqo.PostLogin": {
+            "type": "object",
+            "properties": {
+                "passwd": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "reqo.PostUser": {
             "type": "object",
             "properties": {

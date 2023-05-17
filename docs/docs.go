@@ -38,6 +38,17 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "Login 用户登录",
+                "parameters": [
+                    {
+                        "description": "Account Info",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/reqo.PostLogin"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -120,6 +131,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "reqo.PostLogin": {
+            "type": "object",
+            "properties": {
+                "passwd": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "reqo.PostUser": {
             "type": "object",
             "properties": {
@@ -193,8 +215,8 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost",
-	BasePath:         "/api",
+	Host:             "localhost:8888",
+	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Swagger Example API",
 	Description:      "This is a sample server Petstore server.",

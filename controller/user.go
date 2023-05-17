@@ -16,6 +16,8 @@ import (
 // @Description login by username and password
 // @Accept  json
 // @Produce  json
+// Param Authorization header string true "Bearer token"
+// @Param message body reqo.PostLogin true "Account Info"
 // @Success 200 {object} reso.PostLogin
 // @Failure 400 {object} reso.HTTPError
 // @Failure 404 {object} reso.HTTPError
