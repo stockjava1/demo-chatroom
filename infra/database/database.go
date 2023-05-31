@@ -19,9 +19,7 @@ var DB *xorm.Engine
 var log *logger.CustZeroLogger
 
 func init() {
-	log = logger.NewLogger()
-	log.SetLogLevel(config.Viper.GetString("loglevel.database"))
-	log.SetModule("database")
+	log = logger.NewLoggerModule("database")
 	once.Do(func() {
 		dbType := config.Viper.GetString("database.driver")
 		switch dbType {

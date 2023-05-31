@@ -7,6 +7,11 @@ definitions:
       username:
         type: string
     type: object
+  reqo.PostQuestion:
+    properties:
+      content:
+        type: string
+    type: object
   reqo.PostUser:
     properties:
       age:
@@ -37,6 +42,11 @@ definitions:
       username:
         type: string
     type: object
+  reso.PostQuestion:
+    properties:
+      content:
+        type: integer
+    type: object
   reso.PostUser:
     properties:
       id:
@@ -58,6 +68,40 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /chat:
+    post:
+      consumes:
+      - application/json
+      description: chat with chatgpt
+      parameters:
+      - description: Account Info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/reqo.PostQuestion'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/reso.PostQuestion'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/reso.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/reso.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/reso.HTTPError'
+      summary: Chat 聊天
+      tags:
+      - Chatgpt
   /login:
     post:
       consumes:

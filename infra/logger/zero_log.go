@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/JabinGP/demo-chatroom/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -33,6 +34,17 @@ func NewLogger() *CustZeroLogger {
 	return &CustZeroLogger{
 		logger: &logger,
 	}
+}
+
+func NewLoggerModule(module string) *CustZeroLogger {
+	logger := NewLogger()
+	logger.SetModule(module)
+
+	if config.Viper.GetString("loglevel."+module) != "" {
+		logger.SetLogLevel(config.Viper.GetString("loglevel." + module))
+	}
+
+	return logger
 }
 
 func (czl *CustZeroLogger) SetModule(module string) {

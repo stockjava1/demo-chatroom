@@ -15,6 +15,7 @@ require (
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/rs/zerolog v1.29.1
+	github.com/sashabaranov/go-openai v1.9.5 // indirect
 	github.com/sirupsen/logrus v1.9.1 // indirect
 	github.com/spf13/viper v1.8.1
 	github.com/swaggo/swag v1.16.1

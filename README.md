@@ -33,10 +33,14 @@ go run main.go
 
 //用rizla热启动.
 rizla main.go 
+
+//每次更新swagger注释，需要重新生成
+swag init -g main.go
 ```
 
 默认为 8888 端口，启动后访问`http://localhost:8888`
 
+swagger 启动后访问 http://localhost:8888/swagger/index.html
 ### 前端
 
 用了 react，但是没用 ui 框架，很多的小细节上表现并不好，照着手机的尺寸做的界面，电脑打开的话可以开个 f12 看着比较舒服，凑合着看吧，重点放在后端。

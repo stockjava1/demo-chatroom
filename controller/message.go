@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/JabinGP/demo-chatroom/config"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/model"
 	"github.com/JabinGP/demo-chatroom/model/reqo"
@@ -13,8 +12,7 @@ import (
 var log *logger.CustZeroLogger
 
 func init() {
-	log = logger.NewLogger()
-	log.SetLogLevel(config.Viper.GetString("loglevel.database"))
+	log = logger.NewLoggerModule("message")
 }
 
 // PostMessage send message

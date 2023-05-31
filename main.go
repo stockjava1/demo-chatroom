@@ -39,9 +39,7 @@ func irisZerologMiddleware(ctx iris.Context) {
 	path := ctx.Path()
 
 	// 创建一个子日志器，添加请求的字段
-	log := logger.NewLogger()
-	log.SetLogLevel(config.Viper.GetString("loglevel.http"))
-	log.SetModule("http")
+	log := logger.NewLoggerModule("http")
 	subLogger := log.GetLogger().With().Str("component", "web").
 		Str("method", method).
 		Str("path", path).
@@ -100,9 +98,7 @@ func main() {
 
 	//logLevel := config.Viper.GetString("server.logger.level")
 	//logger.SetLogLevel(logLevel)
-	log := logger.NewLogger()
-	log.SetLogLevel(config.Viper.GetString("loglevel.app"))
-	log.SetModule("app")
+	log := logger.NewLoggerModule("app")
 	log.Info("start application")
 	app := iris.New()
 	//app.Logger().SetLevel(config.Viper.GetString("server.logger.level"))

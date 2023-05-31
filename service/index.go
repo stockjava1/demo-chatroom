@@ -17,3 +17,8 @@ func NewUser() UserService {
 		db: database.DB,
 	}
 }
+
+// NewUser get a user service
+func NewChatgpt() ChatGptService {
+	return ChatGptService{}
+}

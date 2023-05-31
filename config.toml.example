@@ -17,4 +17,13 @@
   dbUser = "****"
   dbPasswd = "****"
 
-
+[loglevel]
+  database = "debug"
+  http = "debug"
+  app = "debug"
+  chatgpt = "debug"
+  message = "debug"
+  
+[openai]
+  apiBase = ""
+  apiKey = ""
