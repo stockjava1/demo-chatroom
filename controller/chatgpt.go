@@ -30,7 +30,7 @@ func Chat(ctx iris.Context) {
 	err := chatgptService.Ask(req.Content, true, ctx.ResponseWriter())
 	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.JSON(model.ErrorQueryDatabase(err))
+		ctx.JSON(model.ErrorAskQuestion(err))
 		return
 	}
 

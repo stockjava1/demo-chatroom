@@ -47,6 +47,10 @@ func ErrorUnauthorized(err error) ErrorModel {
 	return buildError(8, "未认证登录", err.Error())
 }
 
+// ErrorAskQuestion 2-查询数据库失败
+func ErrorAskQuestion(err error) ErrorModel {
+	return buildError(7, "查询chatgpt失败", err.Error())
+}
 func buildError(code int64, msg string, detail string) ErrorModel {
 	return ErrorModel{
 		Code:   code,

@@ -8,6 +8,7 @@ import (
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	openai "github.com/sashabaranov/go-openai"
 	"io"
+	"strings"
 )
 
 // MessageService message service
@@ -18,16 +19,24 @@ type ChatGptService struct {
 
 var client *openai.Client
 
-func init() {
-	config := openai.DefaultAzureConfig(config.Viper.GetString("openai.apiKey"), config.Viper.GetString("openai.apiBase"))
-	config.APIVersion = "2023-05-15" // optional update to latest API version
-
-	//If you use a deployment name different from the model name, you can customize the AzureModelMapperFunc function
-	config.AzureModelMapperFunc = func(model string) string {
-		azureModelMapping := map[string]string{
-			"gpt-3.5-turbo": "gpt-35-turbo", // "your gpt-3.5-turbo deployment name",
+func (c *ChatGptService) Init() {
+	apiBase := config.Viper.GetString("openai.apiBase")
+	apiKey := config.Viper.GetString("openai.apiKey")
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = apiBase
+	c.logger.Info().Msgf("query chatgpt from azure %v, apiBase %s apiKey %s", strings.Contains(apiBase, "azure.com"), apiBase, apiKey)
+	if strings.Contains(apiBase, "azure.com") {
+		c.logger.Info().Msgf("query chatgpt apiBase %s apiKey %s", apiBase, apiKey)
+		//config := openai.DefaultAzureConfig(apiKey, apiBase)
+		config.APIVersion = "2023-05-15" // optional update to latest API version
+		config.APIType = openai.APITypeAzure
+		//If you use a deployment name different from the model name, you can customize the AzureModelMapperFunc function
+		config.AzureModelMapperFunc = func(model string) string {
+			azureModelMapping := map[string]string{
+				"gpt-3.5-turbo": "gpt-35-turbo", // "your gpt-3.5-turbo deployment name",
+			}
+			return azureModelMapping[model]
 		}
-		return azureModelMapping[model]
 	}
 
 	client = openai.NewClientWithConfig(config)
@@ -52,6 +61,7 @@ func (c *ChatGptService) Embeddings(input string) {
 }
 
 func (c *ChatGptService) Ask(question string, isStream bool, out io.Writer) error {
+
 	//req := openai.ChatCompletionRequest{
 	//	Model: conf.Model,
 	//	Messages: []openai.ChatCompletionMessage{
@@ -78,6 +88,7 @@ func (c *ChatGptService) Ask(question string, isStream bool, out io.Writer) erro
 		req.Stream = true
 		stream, err := client.CreateChatCompletionStream(context.Background(), req)
 		if err != nil {
+			c.logger.Error().Msgf("query chatgpt error %v", err)
 			return err
 		}
 		defer stream.Close()
