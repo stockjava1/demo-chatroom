@@ -39,14 +39,14 @@ func irisZerologMiddleware(ctx iris.Context) {
 	path := ctx.Path()
 
 	// 创建一个子日志器，添加请求的字段
-	log := logger.NewLoggerModule("http")
-	subLogger := log.GetLogger().With().Str("component", "web").
+	log := logger.NewLoggerModule("http").GetLogger()
+	subLogger := log.With().Str("component", "web").
 		Str("method", method).
 		Str("path", path).
 		Logger()
-	log.SetLogger(&subLogger)
+	//log.SetLogger(&subLogger)
 	// 记录请求开始的日志
-	log.Info("request started")
+	subLogger.Info().Msg("request started")
 
 	// 创建一个代理响应写入器，捕获状态码和大小
 	prw := &proxyResponseWriter{ctx.ResponseWriter(), http.StatusOK, 0}
@@ -65,7 +65,7 @@ func irisZerologMiddleware(ctx iris.Context) {
 	//	Dur("elapsed", elapsed).
 	//	Msg("request completed")
 
-	log.Info("status %d, size %d, elapsed %v, request completed", prw.statusCode, prw.size, elapsed)
+	subLogger.Info().Msgf("status %d, size %d, elapsed %v, request completed", prw.statusCode, prw.size, elapsed)
 }
 
 // swagger middleware for Iris

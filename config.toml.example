@@ -27,3 +27,4 @@
 [openai]
   apiBase = ""
   apiKey = ""
+  systemUser = ""

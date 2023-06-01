@@ -35,7 +35,7 @@ func PostLogin(ctx iris.Context) {
 		return
 	}
 
-	log.Info("user %v, req %v", user, req)
+	msgLog.Info("user %v, req %v", user, req)
 	// If passwd are inconsistent
 	if user.Passwd != req.Passwd {
 		ctx.StatusCode(iris.StatusBadRequest)

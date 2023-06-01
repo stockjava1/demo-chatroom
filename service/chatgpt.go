@@ -2,13 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/JabinGP/demo-chatroom/config"
+	"github.com/rs/zerolog"
 	openai "github.com/sashabaranov/go-openai"
+	"io"
 )
 
 // MessageService message service
 type ChatGptService struct {
+	systemUser string
+	logger     *zerolog.Logger
 }
 
 var client *openai.Client
@@ -28,7 +33,7 @@ func init() {
 	client = openai.NewClientWithConfig(config)
 }
 
-func (*ChatGptService) Embeddings(input string) {
+func (c *ChatGptService) Embeddings(input string) {
 	resp, err := client.CreateEmbeddings(
 		context.Background(),
 		openai.EmbeddingRequest{
@@ -46,25 +51,57 @@ func (*ChatGptService) Embeddings(input string) {
 	fmt.Println(vectors[:10], "...", vectors[len(vectors)-10:])
 }
 
-func (*ChatGptService) ChatGPT(input string) (string, error) {
-	resp, err := client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: input,
-				},
+func (c *ChatGptService) Ask(question string, isStream bool, out io.Writer) error {
+	//req := openai.ChatCompletionRequest{
+	//	Model: conf.Model,
+	//	Messages: []openai.ChatCompletionMessage{
+	//		{Role: openai.ChatMessageRoleSystem, Content: c.globalConf.LookupPrompt(conf.Prompt)},
+	//		{Role: openai.ChatMessageRoleUser, Content: question},
+	//	},
+	//	MaxTokens:   conf.MaxTokens,
+	//	Temperature: conf.Temperature,
+	//	N:           1,
+	//}
+
+	c.logger.Info().Msgf("question %s, stream %v", question, isStream)
+	req := openai.ChatCompletionRequest{
+		Model: openai.GPT3Dot5Turbo,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: openai.ChatMessageRoleSystem, Content: c.systemUser},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: question,
 			},
 		},
-	)
-	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
-		return "", err
 	}
+	if isStream {
+		req.Stream = true
+		stream, err := client.CreateChatCompletionStream(context.Background(), req)
+		if err != nil {
+			return err
+		}
+		defer stream.Close()
+		for {
+			resp, err := stream.Recv()
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					_, _ = fmt.Fprintln(out)
 
-	fmt.Println(resp.Choices[0].Message.Content)
-
-	return resp.Choices[0].Message.Content, nil
+					break
+				}
+				return err
+			}
+			content := resp.Choices[0].Delta.Content
+			c.logger.Info().Msgf("stream content %v", resp)
+			_, _ = fmt.Fprint(out, content)
+		}
+	} else {
+		resp, err := client.CreateChatCompletion(context.Background(), req)
+		if err != nil {
+			return err
+		}
+		content := resp.Choices[0].Message.Content
+		_, _ = fmt.Fprintln(out, content)
+	}
+	return nil
 }

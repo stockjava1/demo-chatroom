@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/JabinGP/demo-chatroom/config"
 	"github.com/JabinGP/demo-chatroom/infra/database"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 )
 
 // NewMessage get a message service
@@ -20,5 +22,5 @@ func NewUser() UserService {
 
 // NewUser get a user service
 func NewChatgpt() ChatGptService {
-	return ChatGptService{}
+	return ChatGptService{config.Viper.GetString("openai.systemUser"), logger.NewLoggerModule("chatgpt").GetLogger()}
 }

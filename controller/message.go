@@ -9,10 +9,10 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
-var log *logger.CustZeroLogger
+var msgLog *logger.CustZeroLogger
 
 func init() {
-	log = logger.NewLoggerModule("message")
+	msgLog = logger.NewLoggerModule("message")
 }
 
 // PostMessage send message
@@ -20,7 +20,7 @@ func PostMessage(ctx iris.Context) {
 	req := reqo.PostMessage{}
 	ctx.ReadJSON(&req)
 	xx, err := json.Marshal(ctx.Values().Get("logined").(model.Logined))
-	log.Error(">>>> post %s", string(xx))
+	msgLog.Error(">>>> post %s", string(xx))
 	logined := ctx.Values().Get("logined").(model.Logined)
 
 	insertID, err := messageService.Insert(logined.ID, req.ReceiverID, req.Content)
