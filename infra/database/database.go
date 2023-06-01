@@ -7,6 +7,7 @@ import (
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/model/pojo"
 	_ "github.com/go-sql-driver/mysql"
+	"strings"
 	"sync"
 	"xorm.io/core"
 	"xorm.io/xorm"
@@ -20,6 +21,7 @@ var log *logger.CustZeroLogger
 
 func init() {
 	log = logger.NewLoggerModule("database")
+
 	once.Do(func() {
 		dbType := config.Viper.GetString("database.driver")
 		switch dbType {
@@ -49,7 +51,7 @@ func initMysql() {
 	var err error
 	DB, err = xorm.NewEngine(dbType, dbURL)
 	if err != nil {
-		log.Error("Open mysql failed,err:%v\n", err)
+		log.Error().Msgf("Open mysql failed,err:%v\n", err)
 		panic(err)
 	}
 }
@@ -59,15 +61,34 @@ func initTable() {
 	// 自动创建表
 	err := DB.Sync2(new(pojo.User), new(pojo.Message))
 	if err != nil {
-		log.Error("同步数据库和结构体字段失败:%v\n", err)
+		log.Error().Msgf("同步数据库和结构体字段失败:%v\n", err)
 		panic(err)
 	}
+}
+
+func getLogLevel(level string) core.LogLevel {
+	var l core.LogLevel
+	switch strings.ToLower(level) {
+	case "error":
+		l = core.LOG_ERR
+	case "warn":
+		l = core.LOG_WARNING
+	case "info":
+		l = core.LOG_INFO
+	case "debug":
+		l = core.LOG_DEBUG
+	default:
+		l = core.LOG_INFO
+	}
+
+	return l
 }
 
 // 设置可选配置
 func configDB() {
 	// 设置日志等级，设置显示sql，设置显示执行时间
-	DB.SetLogLevel(core.LOG_ERR) //xorm.DEFAULT_LOG_LEVEL
+	dbLogLevel := getLogLevel(config.Viper.GetString("loglevel.database"))
+	DB.SetLogLevel(dbLogLevel) //xorm.DEFAULT_LOG_LEVEL
 	DB.ShowSQL(true)
 	DB.ShowExecTime(true)
 
@@ -81,5 +102,6 @@ func configDB() {
 	// 创建一个子日志器，添加请求的字段
 	//sublogger := logger.NewLogger().With().Str("component", "database").Logger()
 
-	DB.SetLogger(NewZerologLogger(log))
+	dbLog := NewDbLogger(log, dbLogLevel)
+	DB.SetLogger(dbLog)
 }

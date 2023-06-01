@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/model"
 	"github.com/JabinGP/demo-chatroom/model/pojo"
 	"github.com/JabinGP/demo-chatroom/model/reqo"
@@ -9,6 +10,12 @@ import (
 	"github.com/JabinGP/demo-chatroom/tool"
 	"github.com/kataras/iris/v12"
 )
+
+var userLog *logger.CustZeroLogger
+
+func init() {
+	userLog = logger.NewLoggerModule("user")
+}
 
 // PostLogin user login
 // @Tags User
@@ -35,7 +42,7 @@ func PostLogin(ctx iris.Context) {
 		return
 	}
 
-	msgLog.Info("user %v, req %v", user, req)
+	userLog.Info().Msgf("user %v, req %v", user, req)
 	// If passwd are inconsistent
 	if user.Passwd != req.Passwd {
 		ctx.StatusCode(iris.StatusBadRequest)

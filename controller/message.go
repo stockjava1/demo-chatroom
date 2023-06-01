@@ -20,7 +20,7 @@ func PostMessage(ctx iris.Context) {
 	req := reqo.PostMessage{}
 	ctx.ReadJSON(&req)
 	xx, err := json.Marshal(ctx.Values().Get("logined").(model.Logined))
-	msgLog.Error(">>>> post %s", string(xx))
+	msgLog.Error().Msgf(">>>> post %s", string(xx))
 	logined := ctx.Values().Get("logined").(model.Logined)
 
 	insertID, err := messageService.Insert(logined.ID, req.ReceiverID, req.Content)

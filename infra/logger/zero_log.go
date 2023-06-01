@@ -41,7 +41,9 @@ func NewLoggerModule(module string) *CustZeroLogger {
 	logger.SetModule(module)
 
 	if config.Viper.GetString("loglevel."+module) != "" {
-		logger.SetLogLevel(config.Viper.GetString("loglevel." + module))
+		l := config.Viper.GetString("loglevel." + module)
+		logger.SetLogLevel(l)
+		//logger.GetLogger().Info().Msgf("module %s, log level %s", module, l)
 	}
 
 	return logger
@@ -56,9 +58,10 @@ func (czl *CustZeroLogger) SetLogger(logger *zerolog.Logger) {
 	czl.logger = logger
 }
 
-func (czl *CustZeroLogger) GetLogger() *zerolog.Logger {
-	return czl.logger
-}
+//
+//func (czl *CustZeroLogger) GetLogger() *zerolog.Logger {
+//	return czl.logger
+//}
 
 func (czl *CustZeroLogger) SetLogLevel(level string) {
 	var l zerolog.Level
@@ -83,6 +86,55 @@ func (czl *CustZeroLogger) GetLevel() zerolog.Level {
 	return czl.level
 }
 
+func (czl *CustZeroLogger) SetLevel(l zerolog.Level) {
+	czl.level = l
+}
+
+func (czl *CustZeroLogger) With() zerolog.Context {
+	return czl.logger.With()
+}
+
+func (czl *CustZeroLogger) Info() *zerolog.Event {
+	if zerolog.InfoLevel >= czl.level {
+		return czl.logger.Info()
+	}
+
+	return nil
+}
+
+func (czl *CustZeroLogger) Warn() *zerolog.Event {
+	if zerolog.WarnLevel >= czl.level {
+		return czl.logger.Warn()
+	}
+
+	return nil
+}
+
+func (czl *CustZeroLogger) Debug() *zerolog.Event {
+	if zerolog.DebugLevel >= czl.level {
+		return czl.logger.Debug()
+	}
+
+	return nil
+}
+
+func (czl *CustZeroLogger) Error() *zerolog.Event {
+	if zerolog.ErrorLevel >= czl.level {
+		return czl.logger.Error()
+	}
+
+	return nil
+}
+
+func (czl *CustZeroLogger) Fatal() *zerolog.Event {
+	if zerolog.FatalLevel >= czl.level {
+		return czl.logger.Fatal()
+	}
+
+	return nil
+}
+
+/*
 // Debugf implements xorm.Logger interface
 func (czl *CustZeroLogger) Debug(message string, args ...interface{}) {
 	if zerolog.DebugLevel >= czl.level {
@@ -133,6 +185,7 @@ func (czl *CustZeroLogger) Fatal(message string, args ...interface{}) {
 		}
 	}
 }
+*/
 
 //func DebugJson(message string, data interface{}) {
 //	logger.Debug().RawJSON(message, helpers.ServeJson(data)).Msg("")

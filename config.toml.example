@@ -23,7 +23,8 @@
   app = "debug"
   chatgpt = "debug"
   message = "debug"
-  
+  user = "debug"
+
 [openai]
   apiBase = ""
   apiKey = ""

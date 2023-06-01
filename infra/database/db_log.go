@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
+	"github.com/rs/zerolog"
 	"xorm.io/core"
 )
 
@@ -32,71 +33,112 @@ func printStrings(v ...interface{}) string {
 }
 
 // ZerologLogger implements xorm.Logger interface with zerolog
-type ZerologLogger struct {
+type DbLogger struct {
 	logger logger.CustZeroLogger
+	level  core.LogLevel
 }
 
 // NewZerologLogger creates a new ZerologLogger instance
-func NewZerologLogger(logger *logger.CustZeroLogger) *ZerologLogger {
+func NewDbLogger(logger *logger.CustZeroLogger, l core.LogLevel) *DbLogger {
 
-	return &ZerologLogger{
+	dbLogger := &DbLogger{
 		logger: *logger,
+		level:  l,
+	}
+	dbLogger.logger.SetLevel(level(l))
+
+	return dbLogger
+}
+
+func level(l core.LogLevel) zerolog.Level {
+	var nl zerolog.Level
+	switch l {
+	case core.LOG_ERR:
+		nl = zerolog.ErrorLevel
+	case core.LOG_WARNING:
+		nl = zerolog.WarnLevel
+	case core.LOG_INFO:
+		nl = zerolog.InfoLevel
+	case core.LOG_DEBUG:
+		nl = zerolog.DebugLevel
+	default:
+		nl = zerolog.InfoLevel
+	}
+
+	return nl
+}
+
+// Debugf implements xorm.Logger interface
+func (zl *DbLogger) Debugf(format string, v ...interface{}) {
+	if zl.level <= core.LOG_DEBUG {
+		zl.logger.Debug().Msgf(format, v...)
+	}
+}
+
+// Infof implements xorm.Logger interface
+func (zl *DbLogger) Infof(format string, v ...interface{}) {
+	if zl.level <= core.LOG_INFO {
+		zl.logger.Info().Msgf(format, v...)
+	}
+}
+
+// Warnf implements xorm.Logger interface
+func (zl *DbLogger) Warnf(format string, v ...interface{}) {
+	if zl.level <= core.LOG_WARNING {
+		zl.logger.Warn().Msgf(format, v...)
+	}
+}
+
+// Errorf implements xorm.Logger interface
+func (zl *DbLogger) Errorf(format string, v ...interface{}) {
+	if zl.level <= core.LOG_ERR {
+		zl.logger.Error().Msgf(format, v...)
 	}
 }
 
 // Debugf implements xorm.Logger interface
-func (zl *ZerologLogger) Debugf(format string, v ...interface{}) {
-	zl.logger.Debug(format, v...)
+func (zl *DbLogger) Debug(v ...interface{}) {
+	if zl.level <= core.LOG_DEBUG {
+		zl.logger.Debug().Msg(printStrings(v))
+	}
 }
 
 // Infof implements xorm.Logger interface
-func (zl *ZerologLogger) Infof(format string, v ...interface{}) {
-	zl.logger.Info(format, v...)
+func (zl *DbLogger) Info(v ...interface{}) {
+	if zl.level <= core.LOG_INFO {
+		zl.logger.Info().Msg(printStrings(v))
+	}
 }
 
 // Warnf implements xorm.Logger interface
-func (zl *ZerologLogger) Warnf(format string, v ...interface{}) {
-	zl.logger.Warn(format, v...)
+func (zl *DbLogger) Warn(v ...interface{}) {
+	if zl.level <= core.LOG_WARNING {
+		zl.logger.Warn().Msg(printStrings(v))
+	}
 }
 
 // Errorf implements xorm.Logger interface
-func (zl *ZerologLogger) Errorf(format string, v ...interface{}) {
-	zl.logger.Error(format, v...)
-}
-
-// Debugf implements xorm.Logger interface
-func (zl *ZerologLogger) Debug(v ...interface{}) {
-	zl.logger.Debug(printStrings(v))
-}
-
-// Infof implements xorm.Logger interface
-func (zl *ZerologLogger) Info(v ...interface{}) {
-	zl.logger.Info(printStrings(v))
-}
-
-// Warnf implements xorm.Logger interface
-func (zl *ZerologLogger) Warn(v ...interface{}) {
-	zl.logger.Warn(printStrings(v))
-}
-
-// Errorf implements xorm.Logger interface
-func (zl *ZerologLogger) Error(v ...interface{}) {
-	zl.logger.Error(printStrings(v))
+func (zl *DbLogger) Error(v ...interface{}) {
+	if zl.level <= core.LOG_ERR {
+		zl.logger.Error().Msg(printStrings(v))
+	}
 }
 
 // Level implements xorm.Logger interface
-func (zl *ZerologLogger) Level() core.LogLevel {
-	return core.LOG_OFF
+func (zl *DbLogger) Level() core.LogLevel {
+	return zl.level
 }
 
 // SetLevel implements xorm.Logger interface
-func (zl *ZerologLogger) SetLevel(l core.LogLevel) {
+func (zl *DbLogger) SetLevel(l core.LogLevel) {
+	zl.level = l
+	zl.logger.SetLevel(level(l))
 }
 
 // ShowSQL implements xorm.Logger interface
-func (zl *ZerologLogger) ShowSQL(show ...bool) {}
+func (zl *DbLogger) ShowSQL(show ...bool) {}
 
 // IsShowSQL implements xorm.Logger interface
-func (zl *ZerologLogger) IsShowSQL() bool {
+func (zl *DbLogger) IsShowSQL() bool {
 	return true
 }

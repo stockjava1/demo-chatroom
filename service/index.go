@@ -22,5 +22,5 @@ func NewUser() UserService {
 
 // NewUser get a user service
 func NewChatgpt() ChatGptService {
-	return ChatGptService{config.Viper.GetString("openai.systemUser"), logger.NewLoggerModule("chatgpt").GetLogger()}
+	return ChatGptService{config.Viper.GetString("openai.systemUser"), logger.NewLoggerModule("chatgpt")}
 }

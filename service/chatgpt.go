@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/JabinGP/demo-chatroom/config"
-	"github.com/rs/zerolog"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	openai "github.com/sashabaranov/go-openai"
 	"io"
 )
@@ -13,7 +13,7 @@ import (
 // MessageService message service
 type ChatGptService struct {
 	systemUser string
-	logger     *zerolog.Logger
+	logger     *logger.CustZeroLogger
 }
 
 var client *openai.Client
