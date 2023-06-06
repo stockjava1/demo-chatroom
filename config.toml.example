@@ -24,6 +24,7 @@
   chatgpt = "debug"
   message = "debug"
   user = "debug"
+  socket = "debug"
 
 [openai]
   apiBase = ""

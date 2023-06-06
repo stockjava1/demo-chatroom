@@ -5,9 +5,11 @@ import (
 	_ "github.com/JabinGP/demo-chatroom/docs"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/middleware"
+	"github.com/JabinGP/demo-chatroom/mysocket"
 	"github.com/JabinGP/demo-chatroom/route"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/recover"
+	"github.com/kataras/iris/v12/websocket"
 	"net/http"
 	"time"
 )
@@ -94,14 +96,19 @@ func irisZerologMiddleware(ctx iris.Context) {
 // @name Authorization
 func main() {
 	// 初始化 Logger
-	//logger.InitLog()
+	// logger.InitLog()
 	// 在 main 包中使用 Logger
 
 	//logLevel := config.Viper.GetString("server.logger.level")
 	//logger.SetLogLevel(logLevel)
+
+	mySocket := mysocket.NewSocket()
 	log := logger.NewLoggerModule("app")
 	log.Info().Msg("start application")
 	app := iris.New()
+
+	app.Get("/ws", websocket.Handler(mySocket.Ws))
+
 	//app.Logger().SetLevel(config.Viper.GetString("server.logger.level"))
 	// Add logger to log the requests to the terminal
 	//app.Use(logger.New())
