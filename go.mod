@@ -3,9 +3,12 @@ module github.com/JabinGP/demo-chatroom
 go 1.13
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.9 // indirect
+	github.com/go-playground/validator/v10 v10.14.1 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/iris-contrib/middleware/cors v0.0.0-20230429193704-33473bd2dc16
 	github.com/iris-contrib/middleware/jwt v0.0.0-20230429193704-33473bd2dc16
 	github.com/iris-contrib/swagger/v12 v12.2.0-alpha

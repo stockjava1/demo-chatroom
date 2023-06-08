@@ -37,6 +37,7 @@ func PostLogin(ctx iris.Context) {
 	// Query user by username
 	user, err := userService.QueryByUsername(req.Username)
 	if err != nil {
+		userLog.Error().Msgf("QueryByUsername Error {} {}", req.Username, err)
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.JSON(model.ErrorQueryDatabase(err))
 		return
