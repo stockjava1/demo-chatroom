@@ -2,6 +2,7 @@ package tool
 
 import (
 	"errors"
+	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"time"
 
 	"fmt"
@@ -12,12 +13,18 @@ import (
 // 定义一个密钥，用于签名和验证 JWT
 var secretKey = []byte("my_secret_key")
 
+var userLog *logger.CustZeroLogger
+
+func init() {
+	userLog = logger.NewLoggerModule("user")
+}
+
 // GetJWTString get jwt string with expiration time 20 minutes
 func GetJWTString(name string, id int64) (string, error) {
 	token := jwt.NewTokenWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		// 根据需求，可以存一些必要的数据
 		"userName": name,
-		"userId":   id,
+		"userId":   fmt.Sprintf("%d", id),
 
 		// 签发人
 		"iss": "iris",
@@ -49,18 +56,18 @@ func ParseToken(tokenString string) (t.MapClaims, error) {
 
 	if err != nil {
 		// 解析出错
-		fmt.Println("JWT parsing error:", err)
+		userLog.Error().Msgf("JWT parsing error: %v", err)
 		return nil, err
 	}
 	fmt.Println(fmt.Sprintf("User ID >>>>>>>>> : %v", token))
 	if claims, ok := token.Claims.(t.MapClaims); ok && token.Valid {
 		// 解析出token中的数据
-		fmt.Println("User ID:", claims["userId"])
-		fmt.Println("Username:", claims["userName"])
+		userLog.Info().Msgf("User ID: %s", claims["userId"])
+		userLog.Info().Msgf("Username: %s", claims["userName"])
 
 		return claims, nil
 	} else {
-		fmt.Println("Invalid JWT token")
+		userLog.Error().Msgf("Invalid JWT token")
 		return nil, errors.New("Invalid JWT token")
 	}
 

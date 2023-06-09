@@ -79,6 +79,7 @@ func NewSocket() *MyWebSocket {
 							client.Token = token.(string)
 							client.Logined = true
 							client.ID = tokenString["userId"].(string)
+
 							client.Send(res)
 							mySocket.log.Info().Msgf("uid [%s] Login!", mySocket.Conns[nsConn.Conn])
 						} else {
@@ -126,6 +127,7 @@ func NewSocket() *MyWebSocket {
 		//client := NewClient(token.(string), tokenString["userName"].(string), tokenString["userId"].(string), nsConn.Conn)
 		client := NewClient(uid, c, mySocket.log)
 		mySocket.AddClient(client)
+
 		return nil
 	}
 
@@ -190,17 +192,20 @@ func (m *MyWebSocket) RemoveConn(c *websocket.Conn) error {
 
 func (m *MyWebSocket) Ping() {
 	pingTicker := time.NewTicker(10 * time.Second)
-	defer pingTicker.Stop()
 
-	for {
-		select {
-		case <-pingTicker.C:
-			m.log.Info().Msgf("ticker conns %d", len(m.Conns))
-			for _, client := range m.Conns {
-				m.log.Info().Msgf("ping %s", client.conn.ID())
-				client.Send("1")
+	go func() {
+		defer pingTicker.Stop()
+
+		for {
+			select {
+			case <-pingTicker.C:
+				//m.log.Info().Msgf("ticker conns %d", len(m.Conns))
+				for _, client := range m.Conns {
+					//m.log.Info().Msgf("ping %s", client.conn.ID())
+					client.Send("1")
+				}
+			default:
 			}
-		default:
 		}
-	}
+	}()
 }

@@ -103,7 +103,7 @@ func main() {
 	//logger.SetLogLevel(logLevel)
 
 	mySocket := mysocket.NewSocket()
-	go mySocket.Ping()
+	mySocket.Ping()
 	log := logger.NewLoggerModule("app")
 	log.Info().Msg("start application")
 	app := iris.New()
