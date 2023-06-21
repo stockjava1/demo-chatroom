@@ -1,16 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"github.com/JabinGP/demo-chatroom/config"
 	_ "github.com/JabinGP/demo-chatroom/docs"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
 	"github.com/JabinGP/demo-chatroom/middleware"
+	"github.com/JabinGP/demo-chatroom/mynats"
 	"github.com/JabinGP/demo-chatroom/mysocket"
 	"github.com/JabinGP/demo-chatroom/route"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/recover"
 	"github.com/kataras/iris/v12/websocket"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -128,4 +133,25 @@ func main() {
 
 	// Listen in 8888 port
 	app.Run(iris.Addr(config.Viper.GetString("server.addr")), iris.WithoutServerError(iris.ErrServerClosed))
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, os.Interrupt)
+
+	// 等待操作系统信号
+	//<-sigChan
+
+	// 这里是程序的主循环
+	for {
+		select {
+		case <-sigChan:
+			// 接收到 os.Interrupt 信号，执行程序退出操作
+			fmt.Println("Received interrupt signal, exiting...")
+			mynats.Unsubscribe()
+			os.Exit(0)
+		default:
+			// 程序的主要逻辑
+			//fmt.Println("Running...")
+		}
+	}
+	//
 }

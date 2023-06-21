@@ -5,8 +5,9 @@ import "time"
 // Message 消息实体，对应表message
 type Message struct {
 	ID         int64
-	SenderID   int64
-	ReceiverID int64
+	RoomID     string //`db:"room_id"`
+	SenderID   string
+	ReceiverID string
 	Content    string
 	SendTime   int64
 	CreatedAt  time.Time `xorm:"created"` // 这个Field将在Insert时自动赋值为当前时间

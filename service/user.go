@@ -46,7 +46,7 @@ func (userService *UserService) QueryByUsername(username string) (pojo.User, err
 }
 
 // QueryByID return one user
-func (userService *UserService) QueryByID(id int64) (pojo.User, error) {
+func (userService *UserService) QueryByID(id string) (pojo.User, error) {
 	var user = pojo.User{
 		ID: id,
 	}
@@ -59,9 +59,9 @@ func (userService *UserService) QueryByID(id int64) (pojo.User, error) {
 }
 
 // Insert insert a new user and return id
-func (userService *UserService) Insert(user pojo.User) (int64, error) {
+func (userService *UserService) Insert(user pojo.User) (string, error) {
 	if _, err := userService.db.Insert(&user); err != nil {
-		return 0, err
+		return "", err
 	}
 	return user.ID, nil
 }

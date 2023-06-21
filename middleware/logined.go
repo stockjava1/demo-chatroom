@@ -12,7 +12,7 @@ var Logined iris.Handler
 func initUserInfo() {
 	Logined = func(ctx iris.Context) {
 		jwtInfo := ctx.Values().Get("jwt").(*jwt.Token).Claims.(jwt.MapClaims)
-		id := int64(jwtInfo["userId"].(float64))
+		id := jwtInfo["userId"].(string)
 		username := jwtInfo["userName"].(string)
 		logined := model.Logined{
 			ID:       id,

@@ -14,7 +14,7 @@ type MessageService struct {
 }
 
 // Query query message by ID, senderID, receiverID, beginTime, endTime
-func (messageService *MessageService) Query(beginID int64, beginTime int64, endTime int64, receiverID int64) ([]pojo.MessageWithUser, error) {
+func (messageService *MessageService) Query(beginID int64, beginTime int64, endTime int64, receiverID string) ([]pojo.MessageWithUser, error) {
 	var msgList []pojo.MessageWithUser
 
 	// Query received message and sended message
@@ -47,7 +47,7 @@ func (messageService *MessageService) Query(beginID int64, beginTime int64, endT
 }
 
 // Insert insert message and return insert id
-func (messageService *MessageService) Insert(senderID int64, receiverID int64, content string) (int64, error) {
+func (messageService *MessageService) Insert(senderID string, receiverID string, content string) (int64, error) {
 	msg := pojo.Message{
 		SenderID:   senderID,
 		ReceiverID: receiverID,
@@ -56,7 +56,7 @@ func (messageService *MessageService) Insert(senderID int64, receiverID int64, c
 	}
 
 	// If no sender id
-	if msg.SenderID == 0 {
+	if len(msg.SenderID) > 0 {
 		return 0, errors.New("Can't insert message with SenderID(0)")
 	}
 

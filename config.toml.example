@@ -17,6 +17,12 @@
   dbUser = "****"
   dbPasswd = "****"
 
+[redis]
+  addr = "localhost:6379"
+
+[nats]
+  addr = "localhost:4222"
+
 [loglevel]
   database = "debug"
   http = "debug"
@@ -25,6 +31,8 @@
   message = "debug"
   user = "debug"
   socket = "debug"
+  redis = "debug"
+  nats = "debug"
 
 [openai]
   apiBase = ""

@@ -9,6 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.1 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/googollee/go-socket.io v1.7.0 // indirect
 	github.com/iris-contrib/middleware/cors v0.0.0-20230429193704-33473bd2dc16
 	github.com/iris-contrib/middleware/jwt v0.0.0-20230429193704-33473bd2dc16
 	github.com/iris-contrib/swagger/v12 v12.2.0-alpha
@@ -18,6 +19,7 @@ require (
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/nats-io/nats.go v1.26.0 // indirect
 	github.com/rs/zerolog v1.29.1
 	github.com/sashabaranov/go-openai v1.9.5
 	github.com/sirupsen/logrus v1.9.1 // indirect

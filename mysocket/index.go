@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
-	"github.com/JabinGP/demo-chatroom/tool"
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12/websocket"
 	"github.com/kataras/neffos"
@@ -22,14 +21,25 @@ func init() {
 
 type MyWebSocket struct {
 	Ws    *neffos.Server
-	Conns map[*neffos.Conn]*Client //map的value存储uid，用于区分用户
+	Conns map[*neffos.Conn]*Client      //map的value存储uid，用于区分用户
+	IDs   map[string]map[string]*Client //map的value存储uid，用于区分用户 及对应的Client
 	log   *logger.CustZeroLogger
+	//NatsConn *nats.Conn //map的value存储cilent id，用于区分不同client 对应的connect
 }
 
 func NewSocket() *MyWebSocket {
+	log := logger.NewLoggerModule("socket")
+	//conn, err := mynats.Conn()
+	//if err != nil {
+	//	log.Fatal().Msgf("Fail to connect nats %v", err)
+	//	panic("Fail to connect nats")
+	//}
+
 	mySocket := MyWebSocket{
 		Conns: make(map[*neffos.Conn]*Client),
-		log:   logger.NewLoggerModule("socket"),
+		IDs:   make(map[string]map[string]*Client),
+		log:   log,
+		//NatsConn: conn,
 	}
 
 	ws := websocket.New(websocket.DefaultGorillaUpgrader, websocket.Events{
@@ -62,24 +72,31 @@ func NewSocket() *MyWebSocket {
 						if d, ok := data.(map[string]interface{}); ok {
 							// 如果是 map[string]interface{} 类型，说明 data 是一个对象
 							// 可以使用 d["name"] 和 d["age"] 来获取 name 和 age 的值
-							token := d["token"]
-							mySocket.log.Info().Msgf("Token %s", token)
-							tokenString, err := tool.ParseToken(token.(string))
-							if err != nil {
-								mySocket.log.Error().Msgf("Parse Token error %v", err)
-								mySocket.RemoveConn(client.conn)
-								return nil
-							}
 
-							mySocket.log.Info().Msgf("tokenString %v", tokenString)
+							/*
+								token := d["token"]
+								mySocket.log.Info().Msgf("Token %s", token)
+								tokenString, err := tool.ParseToken(token.(string))
+								if err != nil {
+									mySocket.log.Error().Msgf("Parse Token error %v", err)
+									mySocket.RemoveConn(client.conn)
+									return nil
+								}
+
+								mySocket.log.Info().Msgf("tokenString %v", tokenString)
+							*/
+							userName := d["userName"].(string)
+							userID := d["userId"].(string)
 
 							res := "login success"
-
-							client.Name = tokenString["userName"].(string)
-							client.Token = token.(string)
+							client.Name = userName
+							client.ID = userID
+							//client.Name = tokenString["userName"].(string)
+							//client.Token = token.(string)
 							client.Logined = true
-							client.ID = tokenString["userId"].(string)
-
+							//client.ID = tokenString["userId"].(string)
+							mySocket.AddClient(client)
+							client.SubscribeMsg()
 							client.Send(res)
 							mySocket.log.Info().Msgf("uid [%s] Login!", mySocket.Conns[nsConn.Conn])
 						} else {
@@ -157,6 +174,13 @@ func (m *MyWebSocket) AddClient(client *Client) error {
 	m.log.Info().Msgf("Set connect [%s] uid: [%s]", client.conn.ID(), client.UID)
 	m.Conns[client.conn] = client
 
+	if client.Logined {
+		_, ok := m.IDs[client.UID]
+		if !ok { // key不存在
+			m.IDs[client.UID] = make(map[string]*Client)
+		}
+		m.IDs[client.UID][client.ID] = client
+	}
 	return nil
 }
 
@@ -172,6 +196,19 @@ func (m *MyWebSocket) GetClient(c *neffos.Conn) (*Client, error) {
 	return client, nil
 }
 
+// SetUID 设置用户信息
+func (m *MyWebSocket) GetClientByUID(uid string) (map[string]*Client, error) {
+	//clientsMutex.Lock()
+	//defer clientsMutex.Unlock()
+
+	if _, ok := m.IDs[uid]; ok {
+		return m.IDs[uid], nil
+	} else {
+		return nil, errors.New("NO_USER_CLIENT")
+	}
+
+}
+
 // DelConn 移除连接
 func (m *MyWebSocket) RemoveConn(c *websocket.Conn) error {
 	m.log.Info().Msgf("delete connect [%s] uid: [%s]", c.ID(), m.Conns[c])
@@ -185,6 +222,7 @@ func (m *MyWebSocket) RemoveConn(c *websocket.Conn) error {
 		return errors.New(ERROR_NO_CLIENT)
 	}
 
+	delete(m.IDs, client.UID)
 	delete(m.Conns, c)
 
 	return nil

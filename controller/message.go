@@ -60,7 +60,7 @@ func GetMessage(ctx iris.Context) {
 
 	for _, msg := range msgList {
 		private := false
-		if msg.Receiver.ID != 0 {
+		if len(msg.Receiver.ID) > 0 {
 			private = true
 		}
 		// Get single res

@@ -9,6 +9,6 @@ type GetMessage struct {
 
 // PostMessage POST "/message" request object
 type PostMessage struct {
-	ReceiverID int64  `json:"receiverId"`
+	ReceiverID string `json:"receiverId"`
 	Content    string `json:"content"`
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
+	"github.com/JabinGP/demo-chatroom/mynats"
 	"github.com/JabinGP/demo-chatroom/mysocket/response"
 	"github.com/kataras/iris/v12/websocket"
 	"github.com/kataras/neffos"
@@ -68,10 +69,24 @@ func (c *Client) HandleEvent(event string, data interface{}) {
 	case "userInfo":
 		c.getUserInfo()
 		break
+	case "forward":
+		if d, ok := data.(map[string]interface{}); ok {
+			uid := d["uid"].(string)
+			msg := d["msg"].(string)
+			mynats.Publish(uid, msg)
+		}
+		break
+	case "joinRoom":
+
 	default:
-		//
+		c.Send("invalid request")
 	}
 }
+
+func (c *Client) SubscribeMsg() {
+	mynats.Subscribe(c.UID)
+}
+
 func (c *Client) getUserInfo() {
 	userInfo, err := json.Marshal(&response.UserInfo{c.UID, c.Name, c.ID})
 	if err == nil {

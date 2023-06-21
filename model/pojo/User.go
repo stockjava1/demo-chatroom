@@ -4,7 +4,7 @@ import "time"
 
 // User 用户实体，对应表user
 type User struct {
-	ID        int64
+	ID        string `xorm:"pk uuid"`
 	Username  string
 	Passwd    string
 	Gender    int64 // 1 -> girl, 2 -> boy

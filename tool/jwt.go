@@ -20,11 +20,11 @@ func init() {
 }
 
 // GetJWTString get jwt string with expiration time 20 minutes
-func GetJWTString(name string, id int64) (string, error) {
+func GetJWTString(name string, id string) (string, error) {
 	token := jwt.NewTokenWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		// 根据需求，可以存一些必要的数据
 		"userName": name,
-		"userId":   fmt.Sprintf("%d", id),
+		"userId":   id,
 
 		// 签发人
 		"iss": "iris",
