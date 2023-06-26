@@ -97,16 +97,16 @@ func NewSocket() *MyWebSocket {
 								//mySocket.AddClient(client)
 								//mySocket.Subscribe(client.UID)
 								//client.Login()
-								client.Send(res)
+								client.Emit(res)
 
 							} else {
 								mySocket.log.Info().Msgf("uid [%s] Login!", mySocket.Conns[nsConn.Conn])
 								res := "login success"
 								//client.ID = tokenString["userId"].(string)
 								//mySocket.AddClient(client)
-								mySocket.Subscribe(client.UID)
+								mySocket.SubscribeUser(client.UID)
 								//client.Login()
-								client.Send(res)
+								client.Emit(res)
 								mySocket.RemoveConn(nsConn.Conn)
 							}
 
@@ -121,7 +121,7 @@ func NewSocket() *MyWebSocket {
 
 						//client := mySocket.Conns[nsConn.Conn]
 						if !client.Logined {
-							client.Send("Please login before access")
+							client.Emit("Please login before access")
 							mySocket.log.Info().Msgf("Please login before access")
 							return nil
 						}
@@ -162,9 +162,9 @@ func NewSocket() *MyWebSocket {
 		err := client.Login(userId, userName)
 		if err == nil {
 			res := "login success"
-			mySocket.Subscribe(client.UID)
+			mySocket.SubscribeUser(client.UID)
 			//client.Login()
-			client.Send(res)
+			client.Emit(res)
 
 			client.JoinRoom(roomId)
 			mySocket.log.Info().Msgf("[%s] user %s Connected to server!", c.ID(), cid)
@@ -172,7 +172,7 @@ func NewSocket() *MyWebSocket {
 			Clients[client.ID] = client
 		} else {
 			res := "login fail"
-			client.Send(res)
+			client.Emit(res)
 			c.Close()
 		}
 		return nil
@@ -237,7 +237,7 @@ func (m *MyWebSocket) RemoveConn(c *websocket.Conn) error {
 
 func (m *MyWebSocket) NatsCheck() {
 	id := "healthCheck"
-	m.Subscribe(id)
+	m.SubscribeUser(id)
 	m.Publish(id, "i'm healthy!")
 }
 
@@ -251,10 +251,10 @@ func (m *MyWebSocket) Publish(uid string, msg string) {
 	}
 }
 
-func (m *MyWebSocket) Subscribe(uid string) {
+func (m *MyWebSocket) SubscribeUser(uid string) {
 	// defer nc.Close()
 
-	_, ok := m.MyNats.Subs[uid]
+	_, ok := m.MyNats.UserSubs[uid]
 	if !ok {
 		// 订阅NATS消息
 		sub, err := m.MyNats.NatsConn.Subscribe(uid, func(msg *nats.Msg) {
@@ -267,7 +267,7 @@ func (m *MyWebSocket) Subscribe(uid string) {
 				//map[string]*mysocket.Client
 				for _, clientId := range uClient {
 					if client, ok := Clients[clientId]; ok {
-						client.Send(msgData)
+						client.Emit(msgData)
 					}
 				}
 			}
@@ -277,7 +277,7 @@ func (m *MyWebSocket) Subscribe(uid string) {
 			log.Error().Msgf("订阅主题 %s 失败：%v\n", uid, err)
 		} else {
 			log.Info().Msgf("成功订阅主题 %s\n", uid)
-			m.MyNats.Subs[uid] = sub
+			m.MyNats.UserSubs[uid] = sub
 		}
 	}
 
@@ -300,7 +300,7 @@ func (m *MyWebSocket) Ping() {
 				for _, clientId := range m.Conns {
 					if c, ok := Clients[clientId]; ok {
 						//m.log.Info().Msgf("ping %s", client.conn.ID())
-						c.Send("1")
+						c.Emit("1")
 					}
 				}
 			default:
