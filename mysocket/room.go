@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var rooms map[string]*Room = make(map[string]*Room)
+var Rooms map[string]*Room = make(map[string]*Room)
 var roomsMutex sync.RWMutex
 
 const (
@@ -34,26 +34,29 @@ const (
 )
 
 type Room struct {
-	Name     string
-	Clients  []*Client
-	Messages []string
-	Join     chan *Client
-	Leave    chan *Client
-	Incoming chan string
-	Expire   chan bool
-	Expiry   time.Time
+	ID        string
+	Name      string
+	ClientIDs map[string]string
+	Messages  []string
+	Join      chan *Client
+	Leave     chan *Client
+	Incoming  chan string
+	Expire    chan bool
+	Expiry    time.Time
+	Mutex     sync.RWMutex
 }
 
-func NewRoom(name string) *Room {
+func NewRoom(id string, name string) *Room {
 	room := &Room{
-		Name:     name,
-		Clients:  make([]*Client, 0),
-		Messages: make([]string, 0),
-		Join:     make(chan *Client),
-		Leave:    make(chan *Client),
-		Incoming: make(chan string),
-		Expire:   make(chan bool),
-		Expiry:   time.Now().Add(EXPIRY_TIME),
+		ID:        id,
+		Name:      name,
+		ClientIDs: make(map[string]string),
+		Messages:  make([]string, 0),
+		Join:      make(chan *Client),
+		Leave:     make(chan *Client),
+		Incoming:  make(chan string),
+		Expire:    make(chan bool),
+		Expiry:    time.Now().Add(EXPIRY_TIME),
 	}
 	room.Listen()
 	room.TryDelete()
@@ -64,23 +67,23 @@ func AddRoom(room *Room) error {
 	roomsMutex.Lock()
 	defer roomsMutex.Unlock()
 
-	otherRoom := rooms[room.Name]
+	otherRoom := Rooms[room.Name]
 	if otherRoom != nil {
 		return errors.New(ERROR_CREATE)
 	}
-	rooms[room.Name] = room
+	Rooms[room.Name] = room
 	return nil
 }
 
-func RemoveRoom(name string) error {
+func RemoveRoom(id string) error {
 	roomsMutex.Lock()
 	defer roomsMutex.Unlock()
 
-	room := rooms[name]
+	room := Rooms[id]
 	if room == nil {
 		return errors.New(ERROR_JOIN)
 	}
-	delete(rooms, name)
+	delete(Rooms, id)
 	return nil
 }
 
@@ -88,8 +91,8 @@ func GetRoomNames() []string {
 	roomsMutex.RLock()
 	defer roomsMutex.RUnlock()
 
-	keys := make([]string, 0, len(rooms))
-	for k := range rooms {
+	keys := make([]string, 0, len(Rooms))
+	for k := range Rooms {
 		keys = append(keys, k)
 	}
 	return keys
@@ -99,7 +102,7 @@ func GetRoom(name string) (*Room, error) {
 	roomsMutex.RLock()
 	defer roomsMutex.RUnlock()
 
-	room := rooms[name]
+	room := Rooms[name]
 	if room == nil {
 		return nil, errors.New(ERROR_JOIN)
 	}
@@ -110,7 +113,7 @@ func FindRoom(name string) (*Room, error) {
 	roomsMutex.RLock()
 	defer roomsMutex.RUnlock()
 
-	room := rooms[name]
+	room := Rooms[name]
 	if room == nil {
 		return nil, errors.New(ERROR_SWITCH)
 	}
@@ -126,8 +129,8 @@ func (room *Room) AddClient(client *Client) {
 	for _, message := range room.Messages {
 		client.Outgoing <- message
 	}
-	room.Clients = append(room.Clients, client)
-	client.Room = room
+	room.ClientIDs[client.ID] = client.ID
+	client.Rooms[room.ID] = room.ID
 }
 
 func (room *Room) RemoveClient(client *Client) {
@@ -135,15 +138,20 @@ func (room *Room) RemoveClient(client *Client) {
 	client.Mutex.RLock()
 	room.Broadcast(fmt.Sprintf(NOTICE_ROOM_LEAVE, client.Name))
 	client.Mutex.RUnlock()
-	for i, otherClient := range room.Clients {
-		if client == otherClient {
-			room.Clients = append(room.Clients[:i], room.Clients[i+1:]...)
-			break
-		}
-	}
-	client.Mutex.Lock()
-	defer client.Mutex.Unlock()
-	client.Room = nil
+	//for id, otherClient := range room.Clients {
+	//	if client == otherClient {
+	//		room.Clients = append(room.Clients[:i], room.Clients[i+1:]...)
+	//		break
+	//	}
+	//}
+
+	room.Mutex.RLock()
+	delete(room.ClientIDs, client.ID)
+	defer room.Mutex.RUnlock()
+
+	client.Mutex.RLock()
+	defer client.Mutex.RUnlock()
+	delete(client.Rooms, room.ID)
 }
 
 func (room *Room) Broadcast(message string) {
@@ -151,8 +159,10 @@ func (room *Room) Broadcast(message string) {
 	room.Expiry = time.Now().Add(EXPIRY_TIME)
 	log.Println(message)
 	room.Messages = append(room.Messages, message)
-	for _, client := range room.Clients {
-		client.Outgoing <- message
+	for _, clientId := range room.ClientIDs {
+		if client, ok := Clients[clientId]; ok {
+			client.Outgoing <- message
+		}
 	}
 }
 
@@ -182,12 +192,12 @@ func (room *Room) TryDelete() {
 		}()
 	} else {
 		room.Broadcast(NOTICE_ROOM_DELETE)
-		for _, client := range room.Clients {
-			client.Mutex.Lock()
-			client.Room = nil
-			client.Mutex.Unlock()
+		for _, clientId := range room.ClientIDs {
+			room.Mutex.RLock()
+			delete(room.ClientIDs, clientId)
+			room.Mutex.RUnlock()
 		}
-		RemoveRoom(room.Name)
+		RemoveRoom(room.ID)
 		//TODO: Clear out channels
 	}
 }

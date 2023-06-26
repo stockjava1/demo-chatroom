@@ -76,6 +76,11 @@ func irisZerologMiddleware(ctx iris.Context) {
 	zlogger.Info().Msgf("status %d, size %d, elapsed %v, request completed", prw.statusCode, prw.size, elapsed)
 }
 
+type MyServer struct {
+	MySocket *mysocket.MyWebSocket
+	MyNats   *mynats.MyNats
+}
+
 // swagger middleware for Iris
 // swagger embed files
 
@@ -104,13 +109,17 @@ func main() {
 	// logger.InitLog()
 	// 在 main 包中使用 Logger
 
+	log := logger.NewLoggerModule("app")
+	log.Info().Msg("start application")
+
 	//logLevel := config.Viper.GetString("server.logger.level")
 	//logger.SetLogLevel(logLevel)
 
 	mySocket := mysocket.NewSocket()
 	mySocket.Ping()
-	log := logger.NewLoggerModule("app")
-	log.Info().Msg("start application")
+
+	mySocket.NatsCheck()
+
 	app := iris.New()
 
 	app.Get("/ws", websocket.Handler(mySocket.Ws))
@@ -146,7 +155,7 @@ func main() {
 		case <-sigChan:
 			// 接收到 os.Interrupt 信号，执行程序退出操作
 			fmt.Println("Received interrupt signal, exiting...")
-			mynats.Unsubscribe()
+			mySocket.UnsubscribeAll()
 			os.Exit(0)
 		default:
 			// 程序的主要逻辑

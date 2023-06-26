@@ -2,29 +2,28 @@ package mysocket
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/JabinGP/demo-chatroom/infra/logger"
+	"github.com/JabinGP/demo-chatroom/mynats"
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12/websocket"
 	"github.com/kataras/neffos"
-	"sync"
+	"github.com/nats-io/nats.go"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
 // Use a single instance of Validate, it caches struct info
 var validate *validator.Validate
-var clientsMutex sync.RWMutex
 
 func init() {
 	validate = validator.New()
 }
 
 type MyWebSocket struct {
-	Ws    *neffos.Server
-	Conns map[*neffos.Conn]*Client      //map的value存储uid，用于区分用户
-	IDs   map[string]map[string]*Client //map的value存储uid，用于区分用户 及对应的Client
-	log   *logger.CustZeroLogger
-	//NatsConn *nats.Conn //map的value存储cilent id，用于区分不同client 对应的connect
+	Ws     *neffos.Server
+	Conns  map[*neffos.Conn]string //map的value存储uid，用于区分用户
+	log    *logger.CustZeroLogger
+	MyNats *mynats.MyNats
 }
 
 func NewSocket() *MyWebSocket {
@@ -35,17 +34,21 @@ func NewSocket() *MyWebSocket {
 	//	panic("Fail to connect nats")
 	//}
 
+	myNats, err := mynats.NewMyNats()
+	if err != nil {
+		panic("Fail to init nats %v")
+	}
 	mySocket := MyWebSocket{
-		Conns: make(map[*neffos.Conn]*Client),
-		IDs:   make(map[string]map[string]*Client),
-		log:   log,
+		Conns:  make(map[*neffos.Conn]string),
+		log:    log,
+		MyNats: myNats,
 		//NatsConn: conn,
 	}
-
 	ws := websocket.New(websocket.DefaultGorillaUpgrader, websocket.Events{
 		websocket.OnNativeMessage: func(nsConn *websocket.NSConn, msg websocket.Message) error {
 			mySocket.log.Info().Msgf("Server got: %s from [%s]", msg.Body, nsConn.Conn.ID())
-			client := mySocket.Conns[nsConn.Conn]
+			//clientId := mySocket.Conns[nsConn.Conn]
+			client := Clients[nsConn.Conn.ID()]
 			body := msg.Body
 
 			var eventData interface{}
@@ -85,30 +88,38 @@ func NewSocket() *MyWebSocket {
 
 								mySocket.log.Info().Msgf("tokenString %v", tokenString)
 							*/
-							userName := d["userName"].(string)
-							userID := d["userId"].(string)
+							err := client.HandleEvent("login", d)
+							if err != nil {
 
-							res := "login success"
-							client.Name = userName
-							client.ID = userID
-							//client.Name = tokenString["userName"].(string)
-							//client.Token = token.(string)
-							client.Logined = true
-							//client.ID = tokenString["userId"].(string)
-							mySocket.AddClient(client)
-							client.SubscribeMsg()
-							client.Send(res)
-							mySocket.log.Info().Msgf("uid [%s] Login!", mySocket.Conns[nsConn.Conn])
+								mySocket.log.Error().Msgf(" [%s] Login fail!", data)
+								res := "login fail"
+								//client.ID = tokenString["userId"].(string)
+								//mySocket.AddClient(client)
+								//mySocket.Subscribe(client.UID)
+								//client.Login()
+								client.Send(res)
+
+							} else {
+								mySocket.log.Info().Msgf("uid [%s] Login!", mySocket.Conns[nsConn.Conn])
+								res := "login success"
+								//client.ID = tokenString["userId"].(string)
+								//mySocket.AddClient(client)
+								mySocket.Subscribe(client.UID)
+								//client.Login()
+								client.Send(res)
+								mySocket.RemoveConn(nsConn.Conn)
+							}
+
 						} else {
 							// 如果不是 map[string]interface{} 类型，说明 data 不是一个对象
 							// 可以打印 m["data"] 的类型和值
 							mySocket.log.Error().Msgf("fail to login. close connection")
-							mySocket.RemoveConn(client.conn)
+							mySocket.RemoveConn(nsConn.Conn)
 							return nil
 						}
 					} else {
 
-						client := mySocket.Conns[nsConn.Conn]
+						//client := mySocket.Conns[nsConn.Conn]
 						if !client.Logined {
 							client.Send("Please login before access")
 							mySocket.log.Info().Msgf("Please login before access")
@@ -137,14 +148,33 @@ func NewSocket() *MyWebSocket {
 
 	ws.OnConnect = func(c *websocket.Conn) error {
 		ctx := websocket.GetContext(c)
-		uid := ctx.URLParam("uid")
-		mySocket.log.Info().Msgf("[%s] user %s Connected to server!", c.ID(), uid)
+		cid := ctx.URLParam("cid")
+		mySocket.log.Info().Msgf("[%s] connect %s Connected to server!", c.ID(), cid)
 
 		//mySocket.SetUID(c, uid)
 		//client := NewClient(token.(string), tokenString["userName"].(string), tokenString["userId"].(string), nsConn.Conn)
-		client := NewClient(uid, c, mySocket.log)
-		mySocket.AddClient(client)
+		client := NewClient(c.ID(), cid, c, mySocket.log, mySocket.Publish)
+		mySocket.Conns[c] = client.ID
+		//mySocket.AddClient(client)
+		userId := ctx.URLParam("userId")
+		userName := ctx.URLParam("userName")
+		roomId := ctx.URLParam("roomId")
+		err := client.Login(userId, userName)
+		if err == nil {
+			res := "login success"
+			mySocket.Subscribe(client.UID)
+			//client.Login()
+			client.Send(res)
 
+			client.JoinRoom(roomId)
+			mySocket.log.Info().Msgf("[%s] user %s Connected to server!", c.ID(), cid)
+
+			Clients[client.ID] = client
+		} else {
+			res := "login fail"
+			client.Send(res)
+			c.Close()
+		}
 		return nil
 	}
 
@@ -162,10 +192,11 @@ func NewSocket() *MyWebSocket {
 	return &mySocket
 }
 
+/*
 // SetUID 设置用户信息
 func (m *MyWebSocket) AddClient(client *Client) error {
-	clientsMutex.Lock()
-	defer clientsMutex.Unlock()
+	ClientsMutex.Lock()
+	defer ClientsMutex.Unlock()
 
 	otherClients := m.Conns[client.conn]
 	if otherClients != nil {
@@ -175,57 +206,85 @@ func (m *MyWebSocket) AddClient(client *Client) error {
 	m.Conns[client.conn] = client
 
 	if client.Logined {
-		_, ok := m.IDs[client.UID]
+		_, ok := m.UIDs[client.UID]
 		if !ok { // key不存在
-			m.IDs[client.UID] = make(map[string]*Client)
+			m.UIDs[client.UID] = make(map[string]*Client)
 		}
-		m.IDs[client.UID][client.ID] = client
+		m.UIDs[client.UID][client.ID] = client
 	}
 	return nil
 }
-
-// SetUID 设置用户信息
-func (m *MyWebSocket) GetClient(c *neffos.Conn) (*Client, error) {
-	clientsMutex.Lock()
-	defer clientsMutex.Unlock()
-
-	client := m.Conns[c]
-	if client == nil {
-		return nil, errors.New(ERROR_NO_CLIENT)
-	}
-	return client, nil
-}
-
-// SetUID 设置用户信息
-func (m *MyWebSocket) GetClientByUID(uid string) (map[string]*Client, error) {
-	//clientsMutex.Lock()
-	//defer clientsMutex.Unlock()
-
-	if _, ok := m.IDs[uid]; ok {
-		return m.IDs[uid], nil
-	} else {
-		return nil, errors.New("NO_USER_CLIENT")
-	}
-
-}
-
+*/
 // DelConn 移除连接
 func (m *MyWebSocket) RemoveConn(c *websocket.Conn) error {
 	m.log.Info().Msgf("delete connect [%s] uid: [%s]", c.ID(), m.Conns[c])
 
-	clientsMutex.Lock()
-	defer clientsMutex.Unlock()
+	ClientsMutex.RLock()
+	defer ClientsMutex.RUnlock()
 
-	client := m.Conns[c]
-
-	if client == nil {
-		return errors.New(ERROR_NO_CLIENT)
+	if clientId, ok := m.Conns[c]; ok {
+		if c, ok := Clients[clientId]; ok {
+			delete(Clients, clientId)
+			c.Close()
+		}
 	}
-
-	delete(m.IDs, client.UID)
+	//if _, ok := m.Conns[c]; ok {
 	delete(m.Conns, c)
+	//}
 
 	return nil
+}
+
+func (m *MyWebSocket) NatsCheck() {
+	id := "healthCheck"
+	m.Subscribe(id)
+	m.Publish(id, "i'm healthy!")
+}
+
+func (m *MyWebSocket) Publish(uid string, msg string) {
+	message := []byte(msg)
+	err := m.MyNats.NatsConn.Publish(uid, message)
+	if err != nil {
+		m.MyNats.Log.Error().Msgf("Fail to send nats uid %s, msg %s, err %v", uid, msg, err)
+	} else {
+		m.MyNats.Log.Info().Msgf("==> send nats send nats uid %s, msg %s, err %v", uid, msg)
+	}
+}
+
+func (m *MyWebSocket) Subscribe(uid string) {
+	// defer nc.Close()
+
+	_, ok := m.MyNats.Subs[uid]
+	if !ok {
+		// 订阅NATS消息
+		sub, err := m.MyNats.NatsConn.Subscribe(uid, func(msg *nats.Msg) {
+			msgData := string(msg.Data)
+			log.Info().Msgf("收到主题 %s 的消息：%s\n", msg.Subject, string(msg.Data))
+
+			uClient, ok := UIDs[uid]
+			if ok { // key不存在
+				//m.UIDs[client.UID] = make(map[string]*Client)
+				//map[string]*mysocket.Client
+				for _, clientId := range uClient {
+					if client, ok := Clients[clientId]; ok {
+						client.Send(msgData)
+					}
+				}
+			}
+
+		})
+		if err != nil {
+			log.Error().Msgf("订阅主题 %s 失败：%v\n", uid, err)
+		} else {
+			log.Info().Msgf("成功订阅主题 %s\n", uid)
+			m.MyNats.Subs[uid] = sub
+		}
+	}
+
+}
+
+func (m *MyWebSocket) UnsubscribeAll() {
+	m.MyNats.Unsubscribe()
 }
 
 func (m *MyWebSocket) Ping() {
@@ -238,9 +297,11 @@ func (m *MyWebSocket) Ping() {
 			select {
 			case <-pingTicker.C:
 				//m.log.Info().Msgf("ticker conns %d", len(m.Conns))
-				for _, client := range m.Conns {
-					//m.log.Info().Msgf("ping %s", client.conn.ID())
-					client.Send("1")
+				for _, clientId := range m.Conns {
+					if c, ok := Clients[clientId]; ok {
+						//m.log.Info().Msgf("ping %s", client.conn.ID())
+						c.Send("1")
+					}
 				}
 			default:
 			}
